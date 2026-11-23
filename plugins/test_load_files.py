@@ -98,8 +98,11 @@ def require(obj, *names):
 
 
 class Case:
-    def __init__(self, id, label, expect, run, thread=False):
-        self.id, self.label, self.expect, self.run, self.thread = id, label, expect, run, thread
+    """One test. run() does it; with thread=True it runs on a background thread. prepare(), if given, runs first
+    on the UI thread (for setup only the UI thread may do) and its result is passed to run()."""
+
+    def __init__(self, id, label, expect, run, thread=False, prepare=None):
+        self.id, self.label, self.expect, self.run, self.thread, self.prepare = id, label, expect, run, thread, prepare
 
 
 class TestWindow:
@@ -127,15 +130,24 @@ class TestWindow:
         case = self.cases.get((message or {}).get("id"))
         if not case or message.get("command") != "run":
             return
+        try:
+            prepared = (case.prepare(),) if case.prepare else ()
+        except Exception:  # noqa: BLE001 - a failed setup is reported like a failed test
+            self._post(case, "fail", "Setup failed:\n" + traceback.format_exc(limit=4))
+            return
         if case.thread:
             # Starting a thread asks for the plugin's "threading" permission the first time.
-            threading.Thread(target=self._run, args=(case,), daemon=True).start()
+            threading.Thread(target=self._run, args=(case, prepared), daemon=True).start()
         else:
-            self._run(case)
+            self._run(case, prepared)
 
-    def _run(self, case):
+    def _post(self, case, status, text):
+        if self.window is not None:
+            self.window.post({"command": "result", "id": case.id, "status": status, "message": text})
+
+    def _run(self, case, prepared=()):
         try:
-            result = case.run()
+            result = case.run(*prepared)
             status, text = result if isinstance(result, tuple) else ("pass", "" if result is None else str(result))
         except Failed as exc:
             status, text = "fail", str(exc)
@@ -143,8 +155,7 @@ class TestWindow:
             status, text = "skip", str(exc)
         except Exception:  # noqa: BLE001 - report anything unexpected
             status, text = "fail", traceback.format_exc(limit=4)
-        if self.window is not None:
-            self.window.post({"command": "result", "id": case.id, "status": status, "message": text})
+        self._post(case, status, text)
 
 
 def register(title, make_window):
@@ -224,8 +235,8 @@ def make_window(storage):
         result = plater().load_files([str(path)])
         return check(f"Returned {result!r} at once. Orca should ask how to open {path.name}. Either answer is fine.")
 
-    def project_bg():
-        path = project()
+    def project_bg(path):
+        # The project copy was made on the UI thread first (export_3mf_copy is UI thread only).
         try:
             result = plater().load_files([str(path)])
         except RuntimeError as exc:
@@ -260,7 +271,7 @@ def make_window(storage):
         Case("project_ui", "Project file, from the page handler", "Returns at once; Orca then asks how to open the project.",
              project_ui),
         Case("project_bg", "Project file, from a background thread", "Waits for Orca's question. Cancelling it "
-             "raises RuntimeError; choosing an option returns.", project_bg, thread=True),
+             "raises RuntimeError; choosing an option returns.", project_bg, thread=True, prepare=project),
         Case("pathlike", "A pathlib.Path is accepted", "Loads like a str path.", path_like),
     ])
 
