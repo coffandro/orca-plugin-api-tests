@@ -3,12 +3,12 @@
 #
 # [tool.orcaslicer.plugin]
 # name = "Test: filament.set_slot_colour"
-# description = "Manual tests for orca.host.preset.filament.set_slot_colour (coffandro/OrcaSlicer#4)."
+# description = "Manual tests for orca.host.preset.filament.set_slot_colour."
 # author = "coffandro"
 # version = "1.0.0"
 # ///
-"""Test plugin for orca.host.preset.filament.set_slot_colour(slot_number, "#RRGGBB") -- coffandro/OrcaSlicer#4,
-branch feat/plugin-filament-slot-colour.
+"""Test plugin for orca.host.preset.filament.set_slot_colour(slot_number, "#RRGGBB") -- branch
+feat/plugin-filament-slot-colour.
 
 Covers the PR's manual tests: setting slots 1 and 2 and checking the sidebar swatches, the plate preview colours
 and that the preset isn't marked modified, plus the argument checks and a call from a background thread. The

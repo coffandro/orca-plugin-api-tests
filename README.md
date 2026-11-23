@@ -1,7 +1,6 @@
 # OrcaSlicer plugin API test plugins
 
-One OrcaSlicer plugin per plugin API pull request on [coffandro/OrcaSlicer](https://github.com/coffandro/OrcaSlicer),
-for testing each change by hand in a build of its branch. Each plugin opens a window listing the manual tests its
+One OrcaSlicer plugin per plugin API change, for testing each change by hand in a build of its branch. Each plugin opens a window listing the manual tests its
 PR describes, with a **Run** button per test. A result is:
 
 - **PASS** or **FAIL** when the plugin can tell by itself: an error of the expected type was raised, a colour
@@ -13,12 +12,12 @@ PR describes, with a **Run** button per test. A result is:
 
 ## The plugins
 
-| PR | Change | Branch | Plugin |
+| # | Change | Branch | Plugin |
 |---|---|---|---|
-| [#2](https://github.com/coffandro/OrcaSlicer/pull/2) | `orca.host.Plater.load_files` | `feat/plugin-load-files` | [test_load_files.py](plugins/test_load_files.py) |
-| [#3](https://github.com/coffandro/OrcaSlicer/pull/3) | `orca.host.Plater.export_sliced` | `feat/plugin-export-sliced` | [test_export_sliced.py](plugins/test_export_sliced.py) |
-| [#4](https://github.com/coffandro/OrcaSlicer/pull/4) | `orca.host.preset.filament.set_slot_colour` | `feat/plugin-filament-slot-colour` | [test_slot_colour.py](plugins/test_slot_colour.py) |
-| [#5](https://github.com/coffandro/OrcaSlicer/pull/5) | `orca.host.preset.printer_models` / `install_printer` | `feat/plugin-install-printer` | [test_install_printer.py](plugins/test_install_printer.py) |
+| 1 | `orca.host.Plater.load_files` | `feat/plugin-load-files` | [test_load_files.py](plugins/test_load_files.py) |
+| 2 | `orca.host.Plater.export_sliced` | `feat/plugin-export-sliced` | [test_export_sliced.py](plugins/test_export_sliced.py) |
+| 3 | `orca.host.preset.filament.set_slot_colour` | `feat/plugin-filament-slot-colour` | [test_slot_colour.py](plugins/test_slot_colour.py) |
+| 4 | `orca.host.preset.printer_models` / `install_printer` | `feat/plugin-install-printer` | [test_install_printer.py](plugins/test_install_printer.py) |
 
 Each plugin's first test checks that the build has the API at all. It fails with "run this plugin on a build of
 the PR's branch" on any other build, so you can also run it on a build without the change to see the difference.
@@ -37,7 +36,7 @@ which needs no permission.
 
 ## What each test needs
 
-### #2 `load_files` (`test_load_files.py`)
+### 1. `load_files` (`test_load_files.py`)
 
 - **Model** cases add a 20 mm cube (written as an STL to the plugin's storage). From the page handler (UI thread)
   the call is queued and returns at once; from a background thread it waits for the load.
@@ -46,7 +45,7 @@ which needs no permission.
   choosing an option must return normally. Try both.
 - **Bad arguments** is automatic: a single `str`, an empty list, a missing file and a `.txt` file are refused.
 
-### #3 `export_sliced` (`test_export_sliced.py`)
+### 2. `export_sliced` (`test_export_sliced.py`)
 
 Slice the plate before the export tests. **Current printer and scripts** shows what an export will use.
 
@@ -62,14 +61,14 @@ Slice the plate before the export tests. **Current printer and scripts** shows w
 - **Unsliced plate**: run it with the plate not sliced, or changed since slicing; it must raise `RuntimeError`.
 - **Sliced 3MF**, **bad arguments** and **called from a background thread** check themselves.
 
-### #4 `set_slot_colour` (`test_slot_colour.py`)
+### 3. `set_slot_colour` (`test_slot_colour.py`)
 
 Use a printer with at least two filament slots, and put an object on the plate so the 3D view shows the colours.
 The slot tests read the colour back from the project and check that the slot's preset isn't marked modified.
 You only need to check that the sidebar swatch and the object match. **Restore** puts back the colours the
 slots had when the window opened.
 
-### #5 `install_printer` (`test_install_printer.py`)
+### 4. `install_printer` (`test_install_printer.py`)
 
 These tests change your printer list; remove what they add afterwards in Select/Remove printers. **What the
 install cases will add** shows the models they pick from `printer_models()`.

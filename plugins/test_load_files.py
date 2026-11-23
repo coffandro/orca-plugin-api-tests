@@ -3,11 +3,11 @@
 #
 # [tool.orcaslicer.plugin]
 # name = "Test: Plater.load_files"
-# description = "Manual tests for orca.host.Plater.load_files (coffandro/OrcaSlicer#2)."
+# description = "Manual tests for orca.host.Plater.load_files."
 # author = "coffandro"
 # version = "1.0.0"
 # ///
-"""Test plugin for orca.host.Plater.load_files(paths) -- coffandro/OrcaSlicer#2, branch feat/plugin-load-files.
+"""Test plugin for orca.host.Plater.load_files(paths) -- branch feat/plugin-load-files.
 
 Covers the PR's manual tests: a model and a project file, each from a page handler (the UI thread, where the
 load is queued and the call returns at once) and from a background thread (where the call waits for the load

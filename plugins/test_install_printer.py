@@ -3,12 +3,12 @@
 #
 # [tool.orcaslicer.plugin]
 # name = "Test: preset.install_printer"
-# description = "Manual tests for orca.host.preset.printer_models / install_printer (coffandro/OrcaSlicer#5)."
+# description = "Manual tests for orca.host.preset.printer_models / install_printer."
 # author = "coffandro"
 # version = "1.0.0"
 # ///
 """Test plugin for orca.host.preset.printer_models() and install_printer(vendor, model, variant) --
-coffandro/OrcaSlicer#5, branch feat/plugin-install-printer.
+branch feat/plugin-install-printer.
 
 Covers the PR's manual tests: installing a model from a vendor that isn't installed, adding a second nozzle of an
 installed model, calling it with unsaved preset changes and declining, and checking that Select/Remove printers

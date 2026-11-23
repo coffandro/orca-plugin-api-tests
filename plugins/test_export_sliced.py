@@ -3,11 +3,11 @@
 #
 # [tool.orcaslicer.plugin]
 # name = "Test: Plater.export_sliced"
-# description = "Manual tests for orca.host.Plater.export_sliced (coffandro/OrcaSlicer#3)."
+# description = "Manual tests for orca.host.Plater.export_sliced."
 # author = "coffandro"
 # version = "1.0.0"
 # ///
-"""Test plugin for orca.host.Plater.export_sliced(path, host="File") -- coffandro/OrcaSlicer#3, branch
+"""Test plugin for orca.host.Plater.export_sliced(path, host="File") -- branch
 feat/plugin-export-sliced.
 
 Covers the PR's manual tests: exporting .gcode for a printer with a post-processing script and for a BBL
