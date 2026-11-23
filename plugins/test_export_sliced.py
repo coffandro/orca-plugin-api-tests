@@ -30,7 +30,7 @@ PAGE = """
   .expect { color: var(--orca-muted); font-size: 12px; }
   .where { font-size: 11px; color: var(--orca-muted); }
   .status { font-weight: 600; white-space: nowrap; width: 70px; }
-  .pass { color: #2e9d4f; } .fail { color: #d0453b; } .check { color: #c08a1e; } .running { color: var(--orca-muted); }
+  .pass { color: #2e9d4f; } .fail { color: #d0453b; } .check { color: #c08a1e; } .skip, .running { color: var(--orca-muted); }
   .msg { font-size: 12px; white-space: pre-wrap; word-break: break-word; margin-top: 4px; }
 </style>
 <h3>__TITLE__</h3>
@@ -57,7 +57,7 @@ PAGE = """
   orca.onMessage(function (m) {
     if (!m || m.command !== "result") return;
     var st = document.getElementById("st-" + m.id);
-    st.textContent = { pass: "PASS", fail: "FAIL", check: "CHECK" }[m.status] || m.status;
+    st.textContent = { pass: "PASS", fail: "FAIL", check: "CHECK", skip: "SKIP" }[m.status] || m.status;
     st.className = "status " + m.status;
     document.getElementById("msg-" + m.id).textContent = m.message || "";
   });
@@ -68,6 +68,10 @@ PAGE = """
 
 class Failed(Exception):
     """A check that didn't hold; its message says what happened instead."""
+
+
+class Skip(Exception):
+    """The test can't run in Orca's current state (its message says what to set up); not a failure."""
 
 
 def check(message):
@@ -137,6 +141,8 @@ class TestWindow:
             status, text = result if isinstance(result, tuple) else ("pass", "" if result is None else str(result))
         except Failed as exc:
             status, text = "fail", str(exc)
+        except Skip as exc:
+            status, text = "skip", str(exc)
         except Exception:  # noqa: BLE001 - report anything unexpected
             status, text = "fail", traceback.format_exc(limit=4)
         if self.window is not None:
