@@ -198,6 +198,16 @@ def plater():
     return orca.host.plater()
 
 
+def export(path, *host):
+    """export_sliced(), with "not sliced" reported as something to set up rather than a failure."""
+    try:
+        return plater().export_sliced(str(path), *host)
+    except RuntimeError as exc:
+        if "not sliced" in str(exc):
+            raise Skip(f"{exc}. Slice the plate (and don't change it afterwards), then run this test again.")
+        raise
+
+
 def head(path, lines=4):
     with open(path, encoding="utf-8", errors="replace") as handle:
         return "".join(next(handle, "") for _ in range(lines)).rstrip()
@@ -227,11 +237,11 @@ def make_window(storage):
             target = folder / file
             if host == "File":
                 # "File": the result is the final path, which a script may have renamed.
-                name = plater().export_sliced(str(target))
+                name = export(target)
                 written = pathlib.Path(name)
             else:
                 # Another host: the file is written at the path, the result is the name to upload under.
-                name = plater().export_sliced(str(target), host)
+                name = export(target, host)
                 written = target
             if not written.is_file():
                 raise Failed(f"Returned {name!r}, but there is no file at {written}")
@@ -243,7 +253,7 @@ def make_window(storage):
 
     def three_mf():
         target = folder / "plate.3mf"
-        result = plater().export_sliced(str(target))
+        result = export(target)
         with zipfile.ZipFile(target) as archive:
             gcodes = [name for name in archive.namelist() if name.endswith(".gcode")]
         if not gcodes:
