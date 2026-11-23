@@ -1,7 +1,7 @@
 # OrcaSlicer plugin API test plugins
 
-One OrcaSlicer plugin per pull request on [coffandro/OrcaSlicer](https://github.com/coffandro/OrcaSlicer), for
-testing each change by hand in a build of its branch. Each plugin opens a window listing the manual tests its
+One OrcaSlicer plugin per plugin API pull request on [coffandro/OrcaSlicer](https://github.com/coffandro/OrcaSlicer),
+for testing each change by hand in a build of its branch. Each plugin opens a window listing the manual tests its
 PR describes, with a **Run** button per test. A result is:
 
 - **PASS** or **FAIL** when the plugin can tell by itself: an error of the expected type was raised, a colour
@@ -15,7 +15,6 @@ PR describes, with a **Run** button per test. A result is:
 
 | PR | Change | Branch | Plugin |
 |---|---|---|---|
-| [#1](https://github.com/coffandro/OrcaSlicer/pull/1) | Disable the Gamepad API in web views on Linux | `fix/webview-disable-gamepads` | [test_webview_gamepads.py](plugins/test_webview_gamepads.py) |
 | [#2](https://github.com/coffandro/OrcaSlicer/pull/2) | `orca.host.Plater.load_files` | `feat/plugin-load-files` | [test_load_files.py](plugins/test_load_files.py) |
 | [#3](https://github.com/coffandro/OrcaSlicer/pull/3) | `orca.host.Plater.export_sliced` | `feat/plugin-export-sliced` | [test_export_sliced.py](plugins/test_export_sliced.py) |
 | [#4](https://github.com/coffandro/OrcaSlicer/pull/4) | `orca.host.preset.filament.set_slot_colour` | `feat/plugin-filament-slot-colour` | [test_slot_colour.py](plugins/test_slot_colour.py) |
@@ -37,16 +36,6 @@ allow it, or those tests can't start. The plugins write their test files only to
 which needs no permission.
 
 ## What each test needs
-
-### #1 Gamepad API (`test_webview_gamepads.py`)
-
-- **Is the Gamepad API exposed?** runs when the window opens. On Linux with WebKitGTK 2.42 or newer, a fixed
-  build has no `navigator.getGamepads`. On an older WebKitGTK the fix can't apply, so the API stays; the user
-  agent shown includes the WebKit version. On Windows and macOS the API is expected to stay.
-- **Call navigator.getGamepads()** is what crashes an unfixed build on an affected device. To reproduce the bug:
-  on a build *without* the change, with the device that triggers the crash plugged in, press Run. Orca
-  crashes. Then do the same on the PR's build: there is nothing to call, and Orca keeps running.
-- **Listen for a controller** reports gamepad events for 15 seconds; a fixed build reports none.
 
 ### #2 `load_files` (`test_load_files.py`)
 
@@ -94,6 +83,6 @@ install cases will add** shows the models they pick from `printer_models()`.
 
 ## Layout
 
-Every plugin is a single, standalone file. The four API plugins share a small test harness (the window, the Run
+Every plugin is a single, standalone file. They share a small test harness (the window, the Run
 buttons and running a test on a thread), repeated in each file between the "Test harness" markers. Change it in
 all of them together.
