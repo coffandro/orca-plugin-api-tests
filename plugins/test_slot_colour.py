@@ -36,7 +36,6 @@ PAGE = """
 </style>
 <h3>__TITLE__</h3>
 <p class="intro">__INTRO__</p>
-<p><button type="button" id="auto">Run the automatic checks</button></p>
 <table id="cases"></table>
 <script>
 (function () {
@@ -44,7 +43,7 @@ PAGE = """
   function esc(s) { var d = document.createElement("span"); d.textContent = s == null ? "" : String(s); return d.innerHTML; }
   document.getElementById("cases").innerHTML = CASES.map(function (c) {
     return '<tr><td><b>' + esc(c.label) + '</b> <span class="where">' + (c.thread ? "background thread" : "UI thread") +
-      (c.auto ? ", automatic" : "") + '</span><div class="expect">' + esc(c.expect) + '</div><div class="msg" id="msg-' + c.id +
+      '</span><div class="expect">' + esc(c.expect) + '</div><div class="msg" id="msg-' + c.id +
       '"></div></td><td class="status" id="st-' + c.id + '"></td><td><button type="button" data-id="' + c.id + '">Run</button></td></tr>';
   }).join("");
   function run(id) {
@@ -54,7 +53,6 @@ PAGE = """
     orca.postMessage({ command: "run", id: id });
   }
   document.querySelectorAll("button[data-id]").forEach(function (b) { b.onclick = function () { run(b.dataset.id); }; });
-  document.getElementById("auto").onclick = function () { CASES.filter(function (c) { return c.auto; }).forEach(function (c) { run(c.id); }); };
   orca.onMessage(function (m) {
     if (!m || m.command !== "result") return;
     var st = document.getElementById("st-" + m.id);
@@ -101,8 +99,8 @@ def require(obj, *names):
 
 
 class Case:
-    def __init__(self, id, label, expect, run, auto=False, thread=False):
-        self.id, self.label, self.expect, self.run, self.auto, self.thread = id, label, expect, run, auto, thread
+    def __init__(self, id, label, expect, run, thread=False):
+        self.id, self.label, self.expect, self.run, self.thread = id, label, expect, run, thread
 
 
 class TestWindow:
@@ -116,7 +114,7 @@ class TestWindow:
         return self.window is not None and self.window.is_open()
 
     def open(self):
-        cases = [{"id": c.id, "label": c.label, "expect": c.expect, "auto": c.auto, "thread": c.thread}
+        cases = [{"id": c.id, "label": c.label, "expect": c.expect, "thread": c.thread}
                  for c in self.cases.values()]
         html = (PAGE.replace("__TITLE__", self.title).replace("__INTRO__", self.intro)
                 .replace("__CASES__", json.dumps(cases).replace("<", "\\u003c")))
@@ -255,9 +253,9 @@ def make_window(storage):
 
     return TestWindow(TITLE, INTRO, [
         Case("api", "The build has filament.set_slot_colour", "Passes on a build of feat/plugin-filament-slot-colour.",
-             lambda: require(orca.host.preset.filament, "set_slot_colour"), auto=True),
+             lambda: require(orca.host.preset.filament, "set_slot_colour")),
         Case("args", "Bad arguments are refused", "A value that isn't #RRGGBB and the process editor raise ValueError; "
-             "slot 0 and slot 99 raise IndexError. No colour changes.", bad_arguments, auto=True),
+             "slot 0 and slot 99 raise IndexError. No colour changes.", bad_arguments),
         Case("slot1", "Slot 1 to #FF8800", "Reads back as #FF8800; the swatch and the preview turn orange.",
              set_and_read(1, "#FF8800", "#FF8800")),
         Case("slot2", "Slot 2 to 00AA11 (no #)", "The # is optional: reads back as #00AA11 (green).",

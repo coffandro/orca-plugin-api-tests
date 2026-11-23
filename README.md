@@ -8,8 +8,6 @@ PR describes, with a **Run** button per test. A result is:
 - **CHECK** when you have to look at Orca to tell: a cube appeared on the plate, Orca asked how to open a
   project, the swatch changed colour. The text says what to look for.
 
-**Run the automatic checks** runs the tests that need no setup and no looking.
-
 ## The plugins
 
 | # | Change | Branch | Plugin |
@@ -49,7 +47,7 @@ which needs no permission.
 - **Project file** cases first save a copy of the current project with `export_3mf_copy`, then load it, so
   Orca asks how to open it. On the background thread, cancelling that question must raise `RuntimeError`, and
   choosing an option must return normally. Try both.
-- **Bad arguments** is automatic: a single `str`, an empty list, a missing file and a `.txt` file are refused.
+- **Bad arguments** checks itself: a single `str`, an empty list, a missing file and a `.txt` file are refused.
 
 ### 2. `export_sliced` (`test_export_sliced.py`)
 
