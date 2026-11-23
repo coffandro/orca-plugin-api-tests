@@ -30,6 +30,12 @@ the PR's branch" on any other build, so you can also run it on a build without t
 3. Run it from the Plugins dialog. Its window opens; run the tests from there. Running it again while the
    window is open does nothing.
 
+After you change a plugin, or pull a newer version, `python3 install.py` copies the files in `plugins/` over the
+installed ones, keeping their enabled state and permissions. Restart OrcaSlicer afterwards to load them. Name
+plugins to update only those (`python3 install.py test_load_files`), and use `--data-dir PATH` for a data folder
+other than the usual one. A plugin has to be installed once through the Plugins dialog first: the script lists
+any that aren't.
+
 The first test that runs on a background thread makes Orca ask for the plugin's **threading** permission:
 allow it, or those tests can't start. The plugins write their test files only to their own storage folder,
 which needs no permission.
