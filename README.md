@@ -63,10 +63,11 @@ install cases will add** shows the models they pick from `printer_models()`.
 
 - **A model from a vendor that isn't installed** installs the vendor's profiles and the model.
 - **A second nozzle of an installed model** runs from a background thread.
-- **Unsaved changes, declined**: change a setting without saving it first, run the test, and choose Cancel in
-  Orca's question. It must raise `RuntimeError` and install nothing.
-- Afterwards, open Select/Remove printers: what was installed is ticked there, with its default filaments
-  selected.
+- **Unsaved preset changes**: change a setting without saving it first, then run the test. No dialog opens:
+  it must raise `RuntimeError` and install nothing.
+- **Unsaved preset changes, transferred**: with a setting still changed, `preset_changes="transfer"` installs,
+  and the change is still there, unsaved, afterwards.
+- Afterwards, open Select/Remove printers: what was installed is ticked there.
 
 ## Layout
 

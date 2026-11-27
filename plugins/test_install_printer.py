@@ -201,12 +201,12 @@ def models():
 
 
 def label(row, variant):
-    return f"{row['vendor_name']} {row['name']}, {variant} nozzle ({row['vendor']} / {row['model']})"
+    return f"{row['name']}, {variant} nozzle ({row['vendor']} / {row['model']})"
 
 
 def pick_new_vendor(rows):
     installed_vendors = {row["vendor"] for row in rows if row["installed_variants"]}
-    for row in sorted(rows, key=lambda r: (r["vendor_name"].lower(), r["name"].lower())):
+    for row in sorted(rows, key=lambda r: (r["vendor"].lower(), r["name"].lower())):
         if row["vendor"] not in installed_vendors and row["variants"]:
             return row, row["variants"][0]
     return None, None
@@ -232,14 +232,14 @@ def make_window(storage):
         rows = models()
         if not rows:
             raise Failed("printer_models() returned no models")
-        keys = {"vendor", "vendor_name", "model", "name", "variants", "installed_variants"}
+        keys = {"vendor", "model", "name", "variants", "installed_variants"}
         bad = [row for row in rows if not keys <= set(row)]
         if bad:
             raise Failed(f"{len(bad)} rows lack fields; first: {bad[0]}")
         vendors = {row["vendor"] for row in rows}
         installed = [row for row in rows if row["installed_variants"]]
         return (f"{len(rows)} models from {len(vendors)} vendors; {len(installed)} models have nozzles installed, e.g. "
-                + ", ".join(f"{r['vendor_name']} {r['name']} {r['installed_variants']}" for r in installed[:3]))
+                + ", ".join(f"{r['name']} {r['installed_variants']}" for r in installed[:3]))
 
     def preview():
         rows = models()
@@ -253,6 +253,8 @@ def make_window(storage):
         rows = models()
         row = rows[0]
         return "\n".join([
+            "bad preset_changes: " + raises(lambda: p.install_printer(row["vendor"], row["model"], row["variants"][0],
+                                                                      preset_changes="keep"), ValueError),
             "unknown vendor: " + raises(lambda: p.install_printer("NoSuchVendor", row["model"], row["variants"][0]), ValueError),
             "unknown model: " + raises(lambda: p.install_printer(row["vendor"], "NoSuchModel", row["variants"][0]), ValueError),
             "unknown nozzle: " + raises(lambda: p.install_printer(row["vendor"], row["model"], "9.99"), ValueError),
@@ -272,11 +274,11 @@ def make_window(storage):
             row, variant = pick(models())
             if row is None:
                 raise Failed("No model left for this case")
-            preset().install_printer(row["vendor"], row["model"], variant)
+            result = preset().install_printer(row["vendor"], row["model"], variant)
             if not installed_now(row, variant):
-                raise Failed(f"Returned, but printer_models() doesn't list {variant} as installed for {label(row, variant)}")
-            return check(f"Installed {label(row, variant)}; printer_models() lists it.\nLook: it's in the printer "
-                         "dropdown, Select/Remove printers shows it ticked, and its default filaments are selected there.")
+                raise Failed(f"Returned {result!r}, but printer_models() doesn't list {variant} as installed for {label(row, variant)}")
+            return check(f"Installed {label(row, variant)}; printer_models() lists it.\nReturned {result!r}.\n"
+                         "Look: it's in the printer dropdown and Select/Remove printers shows it ticked.")
         return run
 
     def declined():
@@ -290,9 +292,21 @@ def make_window(storage):
         except RuntimeError as exc:
             if installed_now(row, variant):
                 raise Failed(f"Raised RuntimeError ({exc}) but {label(row, variant)} was installed anyway")
-            return f"Raised RuntimeError: {exc}\nNothing was installed."
-        return check(f"Returned and installed {label(row, variant)}. Right only if you didn't have unsaved changes "
-                     "or chose Keep/Save: to test declining, edit a setting first and pick Cancel.")
+            return f"Raised RuntimeError: {exc}\nNo dialog opened and nothing was installed."
+        raise Skip(f"It installed {label(row, variant)}: there were no unsaved preset changes. Change a setting "
+                   "without saving it, then run this test again (remove what it added in Select/Remove printers).")
+
+    def transferred():
+        row, variant = pick_second_nozzle(models())
+        if row is None:
+            row, variant = pick_new_vendor(models())
+        if row is None:
+            raise Failed("No model left to try")
+        result = preset().install_printer(row["vendor"], row["model"], variant, preset_changes="transfer")
+        if not installed_now(row, variant):
+            raise Failed(f"Returned {result!r}, but {label(row, variant)} isn't installed")
+        return check(f"Installed {label(row, variant)} (returned {result!r}). Look: the setting you changed is "
+                     "still changed, and still unsaved.")
 
     return TestWindow(TITLE, INTRO, [
         Case("api", "The build has printer_models and install_printer", "Passes on a build of feat/plugin-install-printer.",
@@ -307,8 +321,10 @@ def make_window(storage):
              install(pick_new_vendor)),
         Case("second_nozzle", "A second nozzle of an installed model, from a background thread",
              "Waits for the UI thread; the nozzle is added next to the installed one.", install(pick_second_nozzle), thread=True),
-        Case("declined", "Unsaved changes, declined", "First change a setting without saving it. Run, then choose "
-             "Cancel in Orca's question: RuntimeError, and nothing is installed.", declined),
+        Case("declined", "Unsaved preset changes", "First change a setting without saving it. No dialog opens: "
+             "RuntimeError, and nothing is installed.", declined),
+        Case("transfer", "Unsaved preset changes, transferred", "With a setting changed and not saved: "
+             "preset_changes=\"transfer\" installs, and the change is still there afterwards.", transferred),
     ])
 
 
